@@ -1,0 +1,11 @@
+{
+  "name": "neoan3-apps/curl",
+  "description": "neoan3 curl class",
+  "version": "0.0.1",
+  "autoload": {
+    "psr-4": {
+      "Neoan3\\Apps\\": "./"
+    }
+
+  }
+}
