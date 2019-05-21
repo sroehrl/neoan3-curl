@@ -127,7 +127,7 @@ class Curl {
         curl_setopt( $curl, CURLOPT_COOKIEJAR, neoan_path.'/apps/plugins/neoanCurl/cookie.txt' );
         curl_setopt( $curl, CURLOPT_COOKIEFILE, neoan_path.'/apps/plugins/neoanCurl/cookie.txt' );
 
-        $fp = fopen(neoan_path.'/apps/plugins/neoanCurl/errorlog.txt', 'w+');
+        $fp = fopen(path.'/asset/Curl-errorlog.txt', 'w+');
         curl_setopt($curl, CURLOPT_VERBOSE, 1);
         curl_setopt($curl, CURLOPT_STDERR, $fp);
         curl_setopt($curl, CURLOPT_HTTP200ALIASES, [400]);
