@@ -7,5 +7,9 @@
       "Neoan3\\Apps\\": "./"
     }
 
+  },
+  "require": {
+    "ext-curl": "*",
+    "ext-json": "*"
   }
 }

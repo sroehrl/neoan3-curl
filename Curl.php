@@ -22,11 +22,9 @@ class Curl {
             }
 
         }
+        $header = self::standardHeader();
         if($auth&&!$headerOverride){
-            $header = [
-                'Authorization: '.$authType. ' '.$auth,
-                'Content-Type: application/json'
-            ];
+            $header[] ='Authorization: '.$authType. ' '.$auth;
 
             $call = json_encode($array);
         }
@@ -46,9 +44,7 @@ class Curl {
      */
     static function put($url, $array, $auth = false, $authType = 'Bearer'){
         $call = json_encode($array);
-        $header = [
-            'Content-Type: application/json'
-        ];
+        $header = self::standardHeader();
         if($auth){
             $header[] = 'Authorization: '.$authType. ' '.$auth;
         }
@@ -64,9 +60,7 @@ class Curl {
      */
     static function post($url, $array=[], $auth = false, $authType = 'Bearer'){
         $post = json_encode($array);
-        $header = [
-            'Content-Type: application/json'
-        ];
+        $header = self::standardHeader();
         if($auth){
             $header[] = 'Authorization: '.$authType. ' '.$auth;
         }
@@ -87,9 +81,7 @@ class Curl {
                 $url .= $key.'='.urlencode($value) .'&';
             }
         }
-        $header = [
-            'Content-Type: application/json'
-        ];
+        $header = self::standardHeader();
         if($auth){
             $header[] = 'Authorization: '.$authType. ' '.$auth;
         }
@@ -140,5 +132,12 @@ class Curl {
             case JSON_ERROR_NONE: return $answer; break;
             default: return ['error'=>'API-error','info'=>$return]; break;
         }
+    }
+
+    private static function standardHeader(){
+        return [
+            'User-Agent: neoan3',
+            'Content-Type: application/json'
+        ];
     }
 }
