@@ -4,10 +4,31 @@ namespace Neoan3\Apps;
 
 /**
  * Class Curl
+ *
  * @package Neoan3\Apps
  */
 class Curl
 {
+
+    /**
+     * @var string
+     */
+    private static $responseFormat = 'plain';
+
+    /**
+     * set output to verbose
+     */
+    static function setResponseFormatVerbose(){
+        self::$responseFormat = 'verbose';
+    }
+
+    /**
+     * set output to payload only
+     */
+    static function setResponseFormatPlain(){
+        self::$responseFormat = 'plain';
+    }
+
     /**
      * @param        $url
      * @param        $array
@@ -16,6 +37,7 @@ class Curl
      * @param bool   $headerOverride
      *
      * @return array|mixed
+     * @throws CurlException
      */
     static function call($url, $array, $auth = false, $authType = 'Bearer', $headerOverride = false)
     {
@@ -46,6 +68,7 @@ class Curl
      * @param string $authType
      *
      * @return array|mixed
+     * @throws CurlException
      */
     static function put($url, $array, $auth = false, $authType = 'Bearer')
     {
@@ -64,6 +87,7 @@ class Curl
      * @param string $authType
      *
      * @return array|mixed
+     * @throws CurlException
      */
     static function post($url, $array = [], $auth = false, $authType = 'Bearer')
     {
@@ -82,6 +106,7 @@ class Curl
      * @param string $authType
      *
      * @return array|mixed
+     * @throws CurlException
      */
     static function get($url, $array = [], $auth = false, $authType = 'Bearer')
     {
@@ -106,9 +131,11 @@ class Curl
      * @param string $type
      *
      * @return array|mixed
+     * @throws CurlException
      */
     static function curling($url, $call, $header, $type = 'POST')
     {
+
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
 
@@ -125,31 +152,86 @@ class Curl
             curl_setopt($curl, CURLOPT_CUSTOMREQUEST, $type);
         }
 
-        //curl_setopt( $curl, CURLOPT_HEADER, 0);
         // cookies
         curl_setopt($curl, CURLOPT_COOKIESESSION, true);
-        curl_setopt($curl, CURLOPT_COOKIEJAR, neoan_path . '/apps/plugins/neoanCurl/cookie.txt');
-        curl_setopt($curl, CURLOPT_COOKIEFILE, neoan_path . '/apps/plugins/neoanCurl/cookie.txt');
+        curl_setopt($curl, CURLOPT_COOKIEJAR, __DIR__ . '/_log/cookie.log');
+        curl_setopt($curl, CURLOPT_COOKIEFILE, __DIR__ . '/_log/cookie.log');
 
-        $fp = fopen(path . '/asset/Curl-errorlog.txt', 'w+');
+        $responseHeaders = [];
+        self::retrieveResponseHeaders($curl,$responseHeaders);
+
+        $fp = fopen(__DIR__ . '/_log/lastCall.log', 'w+');
         curl_setopt($curl, CURLOPT_VERBOSE, 1);
         curl_setopt($curl, CURLOPT_STDERR, $fp);
-        curl_setopt($curl, CURLOPT_HTTP200ALIASES, [400]);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-        $return = curl_exec($curl);
+        $response = curl_exec($curl);
+        // retrieve status code
+        $status = self::retrieveStatus($curl);
         curl_close($curl);
-
-        $answer = json_decode($return, true);
-        switch (json_last_error()) {
-            case JSON_ERROR_NONE:
-                return $answer;
-                break;
-            default:
-                return ['error' => 'API-error', 'info' => $return];
-                break;
-        }
+        // evaluate results
+        return self::evaluateResults($status, $response, $responseHeaders);
     }
 
+    /**
+     * @param $status
+     * @param $response
+     * @param $headers
+     *
+     * @return array|mixed
+     * @throws CurlException
+     */
+    private static function evaluateResults($status, $response, $headers)
+    {
+        $body = $response;
+        if($status > 499){
+            throw new CurlException('Unable to retrieve response. Check ' . __DIR__ . '/_log/lastCall.log');
+        }
+        // json?
+        if(mb_strlen($response)>0 && isset($headers['CONTENT-TYPE']) && strpos($headers['CONTENT-TYPE'][0],'application/json') !== false){
+            $body = json_decode($response, true);
+        }
+        if(self::$responseFormat == 'plain'){
+            return $body;
+        }
+        return [
+            'headers' => $headers,
+            'body' => $body,
+            'status' => $status
+        ];
+    }
+
+    /**
+     * @param $curl
+     * @param $responseHeaders
+     */
+    private static function retrieveResponseHeaders($curl, &$responseHeaders){
+        curl_setopt($curl, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
+            $len = strlen($header);
+            $header = explode(':', $header, 2);
+            if (count($header) < 2) {
+                return $len;
+            }
+            $responseHeaders[strtoupper(trim($header[0]))][] = trim($header[1]);
+            return $len;
+        });
+    }
+
+    /**
+     * @param $ch
+     *
+     * @return int|mixed
+     */
+    private static function retrieveStatus($ch)
+    {
+        if (!curl_errno($ch)) {
+            return curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        }
+        return 500;
+    }
+
+    /**
+     * @return array
+     */
     private static function standardHeader()
     {
         return [

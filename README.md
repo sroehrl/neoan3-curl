@@ -1,3 +1,13 @@
-# neoan3-app Curl
+# Simple PHP curl wrapper
 
-neoan3 curl class (PHP Curl)
+This lightweight curl wrapper facilitates most common needs and is designed for server-2-server communication for Oauth flows, 
+APIs using JSON responses and alike.
+
+## Quick start
+
+```php
+
+
+```
+
+APACHE WARNING
