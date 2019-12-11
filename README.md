@@ -6,6 +6,10 @@
 This lightweight curl wrapper facilitates most common needs and is designed for server-2-server communication for Oauth flows, 
 APIs using JSON responses and alike.
 
+## Installation
+
+`composer require neoan3-apps/curl`
+
 ## Quick start
 
 Json responses are automatically decoded to associative arrays.
